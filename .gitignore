@@ -10,7 +10,7 @@ obj/
 *.log
 
 # Configuration
-# appsettings.Development.json
+appsettings.Development.json
 
 # IDE settings
 .vscode/
