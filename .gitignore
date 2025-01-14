@@ -1,0 +1,22 @@
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+
+# Logs
+*.log
+
+# Configuration
+# appsettings.Development.json
+
+# IDE settings
+.vscode/
+.idea/
+*.vs/
+
+# Dotnet tools
+.env
+.dotnet_toolchain/
