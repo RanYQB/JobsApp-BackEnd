@@ -8,9 +8,9 @@ namespace JobsApi.Models
         public DateTime EndedOn {get; set;}
         public bool IsCurrent {get; set;}
         public int UserId {get; set;}
-        public User User {get; set;}
+        public User User {get; set;} = null!;
         public int CompanyId {get; set;}
-        public Company Company {get; set;}
+        public Company Company {get; set;} = null!;
 	   
         public Job()
         {

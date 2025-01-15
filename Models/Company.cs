@@ -5,6 +5,7 @@ namespace JobsApi.Models
 
         public int CompanyId {get; set;}
         public string Name {get; set;}
+        public ICollection<Job> Jobs { get;} = new List<Job>(); 
 	   
         public Company()
         {
