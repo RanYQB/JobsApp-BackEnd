@@ -1,3 +1,4 @@
+using AutoMapper;
 using JobsApi.Data;
 using JobsApi.Dtos;
 using JobsApi.Models;
@@ -7,25 +8,29 @@ using Microsoft.EntityFrameworkCore;
 namespace JobsApi.Controllers
 {
     [ApiController]
-    [Route("[Controller]")]
+    [Route("api/companies")]
     public class CompanyController : ControllerBase
     {
-        DataContext _entityFramework;
+        private readonly IMapper _mapper;
+        private readonly DataContext _entityFramework;
 
-        public CompanyController(IConfiguration config)
+        public CompanyController(IConfiguration config, IMapper mapper)
         {
             _entityFramework = new DataContext(config);
+            _mapper = mapper;
         }
 
-        [HttpGet("companies")]
+        [HttpGet]
         public async Task<IActionResult> GetCompanies()
         {
             IEnumerable<Company> companies = await _entityFramework.Companies.ToListAsync<Company>();
 
+            IEnumerable<CompanyReadDto> companyReadDtos = _mapper.Map<IEnumerable<CompanyReadDto>>(companies);
+
             return Ok(companies);
         }
 
-        [HttpGet("companies/{Id:int}")]
+        [HttpGet("{Id:int}")]
         public async Task<IActionResult> GetCompanies(int Id)
         {
             Company? company = await _entityFramework.Companies
@@ -37,15 +42,14 @@ namespace JobsApi.Controllers
                 throw new Exception("Error");
             }
 
-            return Ok(company);
+            CompanyReadDto companyReadDto = _mapper.Map<CompanyReadDto>(company);
+            return Ok(companyReadDto);
         }
 
-        [HttpPost("companies")]
+        [HttpPost]
         public async Task<IActionResult> AddCompany(CompanyCreateDto companyCreateDto)
         {
-            Company company = new Company();
-
-            company.Name = companyCreateDto.Name;
+            Company company = _mapper.Map<Company>(companyCreateDto);
 
             await _entityFramework.AddAsync(company);
 

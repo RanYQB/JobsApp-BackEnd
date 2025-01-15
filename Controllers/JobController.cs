@@ -1,3 +1,4 @@
+using AutoMapper;
 using JobsApi.Data;
 using JobsApi.Dtos;
 using JobsApi.Models;
@@ -7,35 +8,32 @@ using Microsoft.EntityFrameworkCore;
 namespace JobsApi.Controllers
 {
     [ApiController]
-    [Route("[Controller]")]
+    [Route("api/jobs")]
     public class JobController : ControllerBase
     {
-        DataContext _entityFramework;
+        private readonly IMapper _mapper;
+        private readonly DataContext _entityFramework;
 
-        public JobController(IConfiguration config)
+        public JobController(IConfiguration config, IMapper mapper)
         {
             _entityFramework = new DataContext(config);
+            _mapper = mapper;
         }
 
-        [HttpGet("jobs")]
+        [HttpGet]
         public async Task<IActionResult> GetJobs()
         {
+           
             IEnumerable<Job> jobs = await _entityFramework.Jobs.ToListAsync<Job>();
+            IEnumerable<JobReadDto> jobReadDtos = _mapper.Map<IEnumerable<JobReadDto>>(jobs);
 
-            return Ok(jobs);
+            return Ok(jobReadDtos);
         }
 
-        [HttpPost("jobs")]
+        [HttpPost]
         public async Task<IActionResult> AddJob(JobCreateDto jobCreateDto)
         {
-            Job job = new Job();
-
-            job.Title = jobCreateDto.Title;
-            job.StartedOn = jobCreateDto.StartedOn;
-            job.EndedOn = jobCreateDto.EndedOn;
-            job.CompanyId = jobCreateDto.CompanyId;
-            job.UserId = jobCreateDto.UserId;
-            job.IsCurrent = job.IsCurrent;
+            Job job = _mapper.Map<Job>(jobCreateDto);
 
             await _entityFramework.AddAsync(job);
 
