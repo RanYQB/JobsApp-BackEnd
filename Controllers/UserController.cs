@@ -1,3 +1,4 @@
+using AutoMapper;
 using JobsApi.Data;
 using JobsApi.Dtos;
 using JobsApi.Models;
@@ -7,25 +8,29 @@ using Microsoft.EntityFrameworkCore;
 namespace JobsApi.Controllers
 {
     [ApiController]
-    [Route("[Controller]")]
+    [Route("api/users")]
     public class UserController : ControllerBase
     {
-        DataContext _entityFramework;
+        private readonly IMapper _mapper;
+        private readonly DataContext _entityFramework;
 
-        public UserController(IConfiguration config)
+        public UserController(IConfiguration config, IMapper mapper)
         {
             _entityFramework = new DataContext(config);
+            _mapper = mapper;
         }
 
-        [HttpGet("users")]
+        [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
             IEnumerable<User> users = await _entityFramework.Users.ToListAsync<User>();
 
-            return Ok(users);
+            IEnumerable<UserReadDto> userReadDtos = _mapper.Map<IEnumerable<UserReadDto>>(users);
+
+            return Ok(userReadDtos);
         }
 
-        [HttpGet("users/{Id:int}")]
+        [HttpGet("{Id:int}")]
         public async Task<IActionResult> GetUser(int Id)
         {
             User? user = await _entityFramework.Users
@@ -37,17 +42,15 @@ namespace JobsApi.Controllers
                 throw new Exception("Error");
             }
 
-            return Ok(user);
+            UserReadDto userReadDto = _mapper.Map<UserReadDto>(user);
+
+            return Ok(userReadDto);
         }
 
-        [HttpPost("users")]
+        [HttpPost]
         public async Task<IActionResult> AddUser(UserCreateDto userCreateDto)
         {
-            User user = new User();
-
-            user.FirstName = userCreateDto.FirstName;
-            user.LastName = userCreateDto.LastName;
-            user.DateOfBirth = userCreateDto.DateOfBirth;
+            User user = _mapper.Map<User>(userCreateDto);
 
             await _entityFramework.AddAsync(user);
 
