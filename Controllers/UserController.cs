@@ -1,9 +1,6 @@
-using AutoMapper;
-using JobsApi.Data;
 using JobsApi.Dtos;
-using JobsApi.Models;
+using JobsApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace JobsApi.Controllers
 {
@@ -11,21 +8,18 @@ namespace JobsApi.Controllers
     [Route("api/users")]
     public class UserController : ControllerBase
     {
-        private readonly IMapper _mapper;
-        private readonly DataContext _entityFramework;
+        private readonly IUserService _userService;
 
-        public UserController(IConfiguration config, IMapper mapper)
+        public UserController(IUserService userService)
         {
-            _entityFramework = new DataContext(config);
-            _mapper = mapper;
+            _userService = userService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
-            IEnumerable<User> users = await _entityFramework.Users.ToListAsync<User>();
 
-            IEnumerable<UserReadDto> userReadDtos = _mapper.Map<IEnumerable<UserReadDto>>(users);
+            IEnumerable<UserReadDto> userReadDtos = await _userService.GetAllUsers();
 
             return Ok(userReadDtos);
         }
@@ -33,16 +27,12 @@ namespace JobsApi.Controllers
         [HttpGet("{Id:int}")]
         public async Task<IActionResult> GetUser(int Id)
         {
-            User? user = await _entityFramework.Users
-                .Where(u => u.UserId == Id)
-                .FirstOrDefaultAsync<User>();
+            UserReadDto? userReadDto = await _userService.GetUserById(Id);
 
-            if(user == null)
+            if(userReadDto == null)
             {
-                throw new Exception("Error");
+                throw new Exception("Utilisateur introuvable");
             }
-
-            UserReadDto userReadDto = _mapper.Map<UserReadDto>(user);
 
             return Ok(userReadDto);
         }
@@ -50,16 +40,14 @@ namespace JobsApi.Controllers
         [HttpPost]
         public async Task<IActionResult> AddUser(UserCreateDto userCreateDto)
         {
-            User user = _mapper.Map<User>(userCreateDto);
+            UserReadDto user = await _userService.RegisterNewUser(userCreateDto);
 
-            await _entityFramework.AddAsync(user);
-
-            if (await _entityFramework.SaveChangesAsync() > 0)
+            if (user == null)
             {
-                return Ok(user);
+                throw new Exception("Error");
             }
             
-            throw new Exception("Error");
+            return Ok(user);
         }
     }
 }

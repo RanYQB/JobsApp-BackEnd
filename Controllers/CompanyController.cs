@@ -2,6 +2,7 @@ using AutoMapper;
 using JobsApi.Data;
 using JobsApi.Dtos;
 using JobsApi.Models;
+using JobsApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,54 +12,45 @@ namespace JobsApi.Controllers
     [Route("api/companies")]
     public class CompanyController : ControllerBase
     {
-        private readonly IMapper _mapper;
-        private readonly DataContext _entityFramework;
+        private readonly ICompanyService _companyService;
 
-        public CompanyController(IConfiguration config, IMapper mapper)
+        public CompanyController(ICompanyService companyService)
         {
-            _entityFramework = new DataContext(config);
-            _mapper = mapper;
+            _companyService = companyService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetCompanies()
         {
-            IEnumerable<Company> companies = await _entityFramework.Companies.ToListAsync<Company>();
+            IEnumerable<CompanyReadDto> companyReadDtos = await _companyService.GetAllCompanies();
 
-            IEnumerable<CompanyReadDto> companyReadDtos = _mapper.Map<IEnumerable<CompanyReadDto>>(companies);
-
-            return Ok(companies);
+            return Ok(companyReadDtos);
         }
 
         [HttpGet("{Id:int}")]
         public async Task<IActionResult> GetCompanies(int Id)
         {
-            Company? company = await _entityFramework.Companies
-                .Where(c => c.CompanyId == Id)
-                .FirstOrDefaultAsync<Company>();
+            CompanyReadDto? companyReadDto = await _companyService.GetCompanyById(Id);
 
-            if(company == null)
+            if(companyReadDto == null)
             {
-                throw new Exception("Error");
+                throw new Exception("Entreprise introuvable");
             }
 
-            CompanyReadDto companyReadDto = _mapper.Map<CompanyReadDto>(company);
             return Ok(companyReadDto);
         }
 
         [HttpPost]
         public async Task<IActionResult> AddCompany(CompanyCreateDto companyCreateDto)
         {
-            Company company = _mapper.Map<Company>(companyCreateDto);
+            CompanyReadDto company = await _companyService.RegisterNewCompany(companyCreateDto);
 
-            await _entityFramework.AddAsync(company);
-
-            if (await _entityFramework.SaveChangesAsync() > 0)
+            if (company == null)
             {
-                return Ok(company);
+                throw new Exception("Error");
             }
             
-            throw new Exception("Error");
+            return Ok(company);
         }
     }
 }

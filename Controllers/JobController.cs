@@ -1,9 +1,6 @@
-using AutoMapper;
-using JobsApi.Data;
 using JobsApi.Dtos;
-using JobsApi.Models;
+using JobsApi.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace JobsApi.Controllers
 {
@@ -11,21 +8,18 @@ namespace JobsApi.Controllers
     [Route("api/jobs")]
     public class JobController : ControllerBase
     {
-        private readonly IMapper _mapper;
-        private readonly DataContext _entityFramework;
+        private readonly IJobService _jobService;
 
-        public JobController(IConfiguration config, IMapper mapper)
+        public JobController(IJobService jobService)
         {
-            _entityFramework = new DataContext(config);
-            _mapper = mapper;
+            _jobService = jobService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetJobs()
         {
            
-            IEnumerable<Job> jobs = await _entityFramework.Jobs.ToListAsync<Job>();
-            IEnumerable<JobReadDto> jobReadDtos = _mapper.Map<IEnumerable<JobReadDto>>(jobs);
+            IEnumerable<JobReadDto> jobReadDtos = await _jobService.GetAllJobs();
 
             return Ok(jobReadDtos);
         }
@@ -33,16 +27,14 @@ namespace JobsApi.Controllers
         [HttpPost]
         public async Task<IActionResult> AddJob(JobCreateDto jobCreateDto)
         {
-            Job job = _mapper.Map<Job>(jobCreateDto);
+            JobReadDto job = await _jobService.RegisterNewJob(jobCreateDto);
 
-            await _entityFramework.AddAsync(job);
-
-            if (await _entityFramework.SaveChangesAsync() > 0)
+            if (job == null)
             {
-                return Ok(job);
+                throw new Exception("Error");
             }
             
-            throw new Exception("Error");
+            return Ok(job);
         }
     }
 }
