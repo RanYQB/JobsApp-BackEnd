@@ -1,7 +1,11 @@
 using JobsApi.Mappings;
+using JobsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<IUserService, UserService>(); 
+builder.Services.AddScoped<IJobService, JobService>(); 
+builder.Services.AddScoped<ICompanyService, CompanyService>(); 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
